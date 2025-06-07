@@ -10,7 +10,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # dotenv files
-.env
+backend/.env
 .env.local
 .key.env
 .key.env.local

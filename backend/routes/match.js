@@ -6,13 +6,14 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
 
 const RIOT_API_KEY = process.env.RIOT_API_KEY
 
-// ============================
-// 📦 Matches by PUUID
-// ============================
+// ============================================
+// 📦 GET /api/matches/:puuid
+// → Holt letzte 20 Match-IDs via PUUID
+// ============================================
 router.get('/matches/:puuid', async (req, res) => {
     const puuid = req.params.puuid
 
-    // 👉 Mock-Dummy für Testzugriffe
+    // ✅ Mock-Modus
     if (puuid === 'mock-puuid-1') {
         return res.json({
             matches: [
@@ -26,13 +27,10 @@ router.get('/matches/:puuid', async (req, res) => {
         })
     }
 
-    // Live-Fetch von Riot
-    const riotUrl = `https://europe.api.riotgames.com/tft/match/v1/matches/by-puuid/${puuid}/ids?count=20`
+    const riotUrl = `https://europe.api.riotgames.com/tft/match/v1/matches/by-puuid/${puuid}/ids?count=20&api_key=${RIOT_API_KEY}`
 
     try {
-        const response = await fetch(riotUrl, {
-            headers: { 'X-Riot-Token': RIOT_API_KEY }
-        })
+        const response = await fetch(riotUrl)
 
         if (!response.ok) throw new Error('Riot API failed')
         const matchIds = await response.json()
@@ -52,17 +50,16 @@ router.get('/matches/:puuid', async (req, res) => {
 })
 
 
-// ============================
-// 📄 Match details by MatchID
-// ============================
+// ============================================
+// 📄 GET /api/match/:matchId
+// → Holt vollständige Match-Details
+// ============================================
 router.get('/match/:matchId', async (req, res) => {
     const matchId = req.params.matchId
-    const riotUrl = `https://europe.api.riotgames.com/tft/match/v1/matches/${matchId}`
+    const riotUrl = `https://europe.api.riotgames.com/tft/match/v1/matches/${matchId}?api_key=${RIOT_API_KEY}`
 
     try {
-        const response = await fetch(riotUrl, {
-            headers: { 'X-Riot-Token': RIOT_API_KEY }
-        })
+        const response = await fetch(riotUrl)
 
         if (!response.ok) throw new Error('Riot API failed')
         const matchData = await response.json()

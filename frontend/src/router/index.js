@@ -4,8 +4,19 @@ import ResultView from '@/views/result-view.vue'
 
 const routes = [
     { path: '/', component: HomeView },
-    { path: '/summoner/:name', component: ResultView, props: true }
+    {
+        path: '/summoner/:gameName/:tagLine',
+        component: ResultView,
+        props: true
+    },
+    {
+        path: '/login',
+        name: 'login',
+        component: () => import('@/views/login-view.vue')
+    }
+
 ]
+
 
 export default createRouter({
     history: createWebHistory(),

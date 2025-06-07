@@ -2,48 +2,90 @@ const express = require('express')
 const router = express.Router()
 require('dotenv').config()
 
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args))
-
-const RIOT_REGION = 'euw1'
 const RIOT_API_KEY = process.env.RIOT_API_KEY
-console.log('API Key:', RIOT_API_KEY)
-router.get('/summoner/:name', async (req, res) => {
-    const summonerName = req.params.name
+console.log('[RIOT] Loaded API Key:', RIOT_API_KEY ? '✔️' : '❌ NICHT GESETZT!')
 
-    // 👉 Mock-Fallback
-    if (summonerName === 'mock-puuid-1') {
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args))
+
+const ACCOUNT_REGION = 'europe'
+const SUMMONER_REGION = 'euw1'
+
+router.get('/summoner/:gameName/:tagLine', async (req, res) => {
+    const { gameName, tagLine } = req.params
+    console.log('[RIOT] Request for:', gameName, '#', tagLine)
+
+    if (gameName === 'mock' && tagLine === 'puuid') {
         return res.json({
-            name: 'mock-puuid-1',
+            name: 'MockPlayer',
             puuid: 'mock-puuid-1',
-            profileIconId: 456
+            profileIconId: 123,
+            rank: 'Gold I'
         })
     }
 
     try {
-        const response = await fetch(
-            `https://${RIOT_REGION}.api.riotgames.com/tft/summoner/v1/summoners/by-name/${encodeURIComponent(summonerName)}`,
-            {
-                headers: {
-                    'X-Riot-Token': RIOT_API_KEY
-                }
-            }
-        )
+        // Step 1: Account → PUUID
+        const accountUrl = `https://${ACCOUNT_REGION}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}?api_key=${RIOT_API_KEY}`
+        const accountRes = await fetch(accountUrl)
 
-        if (!response.ok) {
-            return res.status(response.status).json({ error: 'summoner not found or API error' })
+        if (!accountRes.ok) {
+            const errorText = await accountRes.text()
+            console.error('[RIOT] Account API error:', errorText)
+            return res.status(accountRes.status).json({ error: 'account not found', detail: errorText })
         }
 
-        const data = await response.json()
+        const accountData = await accountRes.json()
+        const { puuid } = accountData
+
+        // Step 2: Summoner-Info → Name, Icon, ID
+        const summonerUrl = `https://${SUMMONER_REGION}.api.riotgames.com/tft/summoner/v1/summoners/by-puuid/${puuid}?api_key=${RIOT_API_KEY}`
+        const summonerRes = await fetch(summonerUrl)
+
+        if (!summonerRes.ok) {
+            const errText = await summonerRes.text()
+            console.warn('[RIOT] Summoner fallback. Only PUUID returned. Reason:', errText)
+            return res.json({
+                puuid,
+                name: gameName,
+                profileIconId: null,
+                rank: 'Unranked'
+            })        }
+
+        const summonerData = await summonerRes.json()
+
+        // Step 3: Ranked Info → tier + rank
+        const leagueUrl = `https://${SUMMONER_REGION}.api.riotgames.com/tft/league/v1/entries/by-summoner/${summonerData.id}?api_key=${RIOT_API_KEY}`
+        const leagueRes = await fetch(leagueUrl)
+
+        let rank = 'Unranked'
+        if (leagueRes.ok) {
+            const leagueData = await leagueRes.json()
+            if (Array.isArray(leagueData)) {
+                const tftRanked = leagueData.find(entry => entry.queueType === 'RANKED_TFT')
+                if (tftRanked) {
+                    rank = `${tftRanked.tier} ${tftRanked.rank}`
+                } else {
+                    console.log('[RIOT] No RANKED_TFT entry found')
+                }
+            } else {
+                console.warn('[RIOT] Unexpected league data:', leagueData)
+            }
+        } else {
+            const text = await leagueRes.text()
+            console.warn('[RIOT] League API error:', text)
+        }
+
         res.json({
-            name: data.name,
-            puuid: data.puuid,
-            profileIconId: data.profileIconId
+            name: summonerData.name,
+            puuid: summonerData.puuid,
+            profileIconId: summonerData.profileIconId,
+            rank: rank
         })
+
     } catch (err) {
-        console.error('Riot API error:', err)
+        console.error('[RIOT] Fatal error:', err)
         res.status(500).json({ error: 'internal server error' })
     }
 })
-
 
 module.exports = router

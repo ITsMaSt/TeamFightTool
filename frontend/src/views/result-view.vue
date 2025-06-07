@@ -5,9 +5,15 @@
         <!-- Summoner Card -->
         <div class="col-12">
           <div class="custom-card">
-            <summoner-card v-if="summoner" :name="summoner.name" :icon-id="summoner.profileIconId" />
+            <summoner-card
+                v-if="summoner"
+                :name="summoner.name || gameName"
+                :icon-id="summoner.profileIconId"
+                :rank="summoner.rank"
+            />
           </div>
         </div>
+
 
         <!-- Stat Summary -->
         <div class="col-12">
@@ -19,7 +25,12 @@
         <!-- Match History -->
         <div class="col-12">
           <div class="custom-card">
-            <match-history v-if="matches.length" :matches="matches" />
+            <match-history
+                v-if="summoner && matches.length"
+                :matches="matches"
+                :puuid="summoner.puuid"
+            />
+
           </div>
         </div>
 
@@ -44,7 +55,7 @@ export default {
     StatSummary,
     MatchHistory
   },
-  props: ['name'],
+  props: ['gameName', 'tagLine'],
   data() {
     return {
       summoner: null,
@@ -67,7 +78,7 @@ export default {
   },
   async mounted() {
     try {
-      const res = await fetch(`/api/summoner/${encodeURIComponent(this.name)}`)
+      const res = await fetch(`/api/summoner/${encodeURIComponent(this.gameName)}/${encodeURIComponent(this.tagLine)}`)
       if (!res.ok) throw new Error('Summoner not found')
       const data = await res.json()
       this.summoner = data

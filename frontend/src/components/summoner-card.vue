@@ -7,7 +7,8 @@
           alt="Profile Icon"
           class="profile-icon"
       />
-      <h2>{{ name }}</h2>
+      <h2 class="name">{{ name }}</h2>
+      <p class="rank" v-if="rank">Rank: {{ rank }}</p>
     </div>
   </div>
 </template>
@@ -17,7 +18,8 @@ export default {
   name: 'summoner-card',
   props: {
     name: String,
-    iconId: Number
+    iconId: Number,
+    rank: String
   }
 }
 </script>
@@ -46,5 +48,19 @@ export default {
   border-radius: 50%;
   border: 2px solid #fff;
   margin-bottom: 10px;
+}
+
+.name {
+  margin: 10px 0 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #222; /* Change from #fff to #222 for visibility */
+}
+
+.rank {
+  margin: 4px 0 0;
+  font-size: 1rem;
+  font-weight: 400;
+  color: #aee1ff;
 }
 </style>

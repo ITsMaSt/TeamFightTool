@@ -4,17 +4,14 @@
       <summoner-search @submitted="handleSearch" />
       <div v-if="error" class="error-text">{{ error }}</div>
 
-
       <summoner-card
           v-if="summoner && summoner.name"
           :name="summoner.name"
           :icon-id="summoner.profileIconId"
+          :rank="summoner.rank"
       />
       <stat-summary v-if="stats" :stats="stats" />
       <match-history v-if="matches.length" :matches="matches" />
-
-
-
 
       <div v-if="stats">
         <h3>Placement-Stats</h3>
@@ -38,8 +35,6 @@ import SummonerCard from '@/components/summoner-card.vue'
 import MatchHistory from '@/components/match-history.vue'
 import StatSummary from '@/components/stat-summary.vue'
 
-
-
 export default {
   name: 'home-view',
   components: {
@@ -48,8 +43,6 @@ export default {
     MatchHistory,
     StatSummary
   },
-
-
   data() {
     return {
       summoner: null,
@@ -60,8 +53,14 @@ export default {
     }
   },
   methods: {
-    handleSearch(name) {
-      this.$router.push(`/summoner/${encodeURIComponent(name)}`)
+    handleSearch({ gameName, tagLine }) {
+      if (!gameName || !tagLine) {
+        this.error = 'Bitte fülle beide Felder aus.'
+        return
+      }
+
+      this.error = ''
+      this.$router.push(`/summoner/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`)
     }
   }
 }
@@ -91,7 +90,4 @@ export default {
   font-size: 1.3rem;
   margin-top: 10px;
 }
-
-
-
 </style>
