@@ -40,8 +40,9 @@ export default {
         const data = await res.json()
         if (!res.ok) throw new Error(data.error || 'Login failed')
 
-        // redirect
-        this.$router.push(`/result/${this.gameName}`)
+        // ✅ Erfolgreiche Weiterleitung zur Result-Seite
+        this.$router.push(`/summoner/${this.gameName}/${this.tagLine}`)
+
       } catch (err) {
         this.error = err.message
       }
