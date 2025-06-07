@@ -14,7 +14,7 @@ yarn-error.log*
 .env.local
 .key.env
 .key.env.local
-
+backend/routes/key.env
 # OS / IDE Junk
 .DS_Store
 Thumbs.db

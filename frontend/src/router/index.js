@@ -1,9 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeViewView from '../views/home-view.vue'
+import HomeView from '../views/home-view.vue'
+import ResultView from '@/views/result-view.vue'
 
 const routes = [
-    { path: '/', component: HomeViewView },
-    // später: { path: '/stats/:puuid', component: StatView }
+    { path: '/', component: HomeView },
+    { path: '/summoner/:name', component: ResultView, props: true }
 ]
 
 export default createRouter({
